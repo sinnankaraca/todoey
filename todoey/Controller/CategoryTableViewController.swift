@@ -7,17 +7,20 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 
 class CategoryTableViewController: UITableViewController {
+    
+    let realm = try! Realm()
+    
     let context  = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     var arrayOfCategories = [Category]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        loadContextFromCoreData()
+        //loadContextFromCoreData()
         
     }
     
@@ -30,7 +33,7 @@ class CategoryTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for : indexPath)
         
-        cell.textLabel?.text = arrayOfCategories[indexPath.row].category
+        cell.textLabel?.text = arrayOfCategories[indexPath.row].name
         
         return cell
     }
@@ -57,11 +60,11 @@ class CategoryTableViewController: UITableViewController {
         let alert = UIAlertController(title: "Add Category", message: "", preferredStyle: .alert)
         let alertAction = UIAlertAction(title: "ADD", style: .default) { (UIAlertAction) in
             
-            let newCategory = Category(context: self.context)
-            newCategory.category = textField.text
+            let newCategory = Category()
+            newCategory.name = textField.text!
             
             self.arrayOfCategories.append(newCategory)
-            self.saveContextToCoreData()
+            self.save(category: newCategory)
             
         }
         alert.addTextField { (AlertTextField) in
@@ -75,10 +78,12 @@ class CategoryTableViewController: UITableViewController {
     }
     
     //MARK: - Add context to Coredata
-    func saveContextToCoreData(){
+    func save(category : Category){
         
         do{
-            try context.save()
+            try realm.write {
+                realm.add(category)
+            }
         }catch{
             print("Error on SaveContextCoreData \(error)")
         }
@@ -86,15 +91,15 @@ class CategoryTableViewController: UITableViewController {
         tableView.reloadData()
     }
     //MARK: - Load context from CoreData
-    func loadContextFromCoreData(request : NSFetchRequest<Category> = Category.fetchRequest()){
-        
-        do{
-            arrayOfCategories = try context.fetch(request)
-        }catch{
-            print("Error on loadContextFromCoreData \(error)")
-        }
-        
-    }
+//    func loadContextFromCoreData(request : NSFetchRequest<Category> = Category.fetchRequest()){
+//        
+//        do{
+//            arrayOfCategories = try context.fetch(request)
+//        }catch{
+//            print("Error on loadContextFromCoreData \(error)")
+//        }
+//        
+//    }
     
     
 }
