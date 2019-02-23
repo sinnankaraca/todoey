@@ -14,43 +14,29 @@ class CategoryTableViewController: UITableViewController {
     
     let realm = try! Realm()
     
-    let context  = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    var arrayOfCategories = [Category]()
+    var arrayOfCategories : Results<Category>?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //loadContextFromCoreData()
+        loadFromRealm()
         
     }
     
     //MARK: - TableViewNumberOfRowsInSection
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return arrayOfCategories.count
+        
+        // If it is nil then make it 1
+        return arrayOfCategories?.count ?? 1
     }
     
     //MARK: - TableViewCellForRowAtIndexPath
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for : indexPath)
         
-        cell.textLabel?.text = arrayOfCategories[indexPath.row].name
+        cell.textLabel?.text = arrayOfCategories?[indexPath.row].name ?? "No categories added"
         
         return cell
-    }
-    //MARK: - TableView Delegate Methods - Segue methods
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        performSegue(withIdentifier: "goToItems", sender: self)
-    }
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        let destinationVC = segue.destination as! ToDoListViewController
-        
-        if let indexPath = tableView.indexPathForSelectedRow {
-            
-            destinationVC.selectedCategory = arrayOfCategories[indexPath.row]
-        }
-        
     }
     
     //MARK: - AddButtonPressed - Alert Methods
@@ -63,8 +49,7 @@ class CategoryTableViewController: UITableViewController {
             let newCategory = Category()
             newCategory.name = textField.text!
             
-            self.arrayOfCategories.append(newCategory)
-            self.save(category: newCategory)
+            self.saveFromRealm(category: newCategory)
             
         }
         alert.addTextField { (AlertTextField) in
@@ -77,8 +62,21 @@ class CategoryTableViewController: UITableViewController {
         
     }
     
-    //MARK: - Add context to Coredata
-    func save(category : Category){
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "goToItems", sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVC = segue.destination as! ToDoListViewController
+        
+        if let indexPath = tableView.indexPathForSelectedRow{
+            destinationVC.selectedCategory = arrayOfCategories?[indexPath.row]
+            
+        }
+    }
+    
+    //MARK: - Add context to Realm
+    func saveFromRealm(category : Category){
         
         do{
             try realm.write {
@@ -90,16 +88,13 @@ class CategoryTableViewController: UITableViewController {
  
         tableView.reloadData()
     }
-    //MARK: - Load context from CoreData
-//    func loadContextFromCoreData(request : NSFetchRequest<Category> = Category.fetchRequest()){
-//        
-//        do{
-//            arrayOfCategories = try context.fetch(request)
-//        }catch{
-//            print("Error on loadContextFromCoreData \(error)")
-//        }
-//        
-//    }
+    //MARK: - Load context from Realm
+    func loadFromRealm(){
+        
+        arrayOfCategories = realm.objects(Category.self)
+        tableView.reloadData()
+        
+    }
     
     
 }
