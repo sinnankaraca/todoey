@@ -90,7 +90,7 @@ class ToDoListViewController: UITableViewController {
             alertTextField.placeholder = "Create New Item"
             textField = alertTextField
             
-            print(alertTextField.text)
+            print(alertTextField.text!)
         }
         alert.addAction(action)
         present(alert, animated : true , completion : nil)
