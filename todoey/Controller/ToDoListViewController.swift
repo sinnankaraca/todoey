@@ -25,9 +25,7 @@ class ToDoListViewController: UITableViewController {
         
         // Where the coredata is saved.
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        
-        
-        
+   
     }
     
     //TODO: TableView DataSource methods
@@ -51,18 +49,20 @@ class ToDoListViewController: UITableViewController {
     
     //TODO: TableView Delegate methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //print(arrayOfTheList[indexPath.row])
-
         
-        // arrayOfTheList[indexPath.row].done = !arrayOfTheList[indexPath.row].done
-        
-    
-//        context.delete(arrayOfTheList[indexPath.row])
-//        arrayOfTheList.remove(at: indexPath.row)
-        
-        
-        //saveDataAndUpdate()
-        
+        if let item = todoItems?[indexPath.row]{
+            do{
+                try realm.write {
+                    // To delete the item from realm
+                        //self.realm.delete(item)
+                    item.done = !item.done
+                }
+            }catch{
+                print("Deleting item error \(error)")
+            }
+            
+        }
+        tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -83,7 +83,9 @@ class ToDoListViewController: UITableViewController {
                     try self.realm.write {
                         let newItem = Item()
                         newItem.title = textField.text!
+                        newItem.dateCreated = Date()
                         currentCategory.items.append(newItem)
+                        
                     }
                 }catch{
                     print("Error on SaveContextCoreData \(error)")
@@ -113,32 +115,24 @@ class ToDoListViewController: UITableViewController {
 }
 // MARK - Search bar methods
 
-//extension ToDoListViewController: UISearchBarDelegate{
-//    
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        let request : NSFetchRequest<Item> = Item.fetchRequest()
-//        
-//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//        request.predicate = predicate
-//        
-//        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
-//        
-//        request.sortDescriptors = [sortDescriptor]
-//        
-//        loadData(with: request, predicate: predicate)
-//        
-//    }
-//    
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        if searchBar.text?.count == 0 {
-//            
-//            loadData()
-//            
-//            DispatchQueue.main.async {
-//              searchBar.resignFirstResponder()
-//            }
-//            
-//        }
-//    }
-// 
-//}
+extension ToDoListViewController: UISearchBarDelegate{
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+        
+        tableView.reloadData()
+}
+   
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadData()
+            
+            DispatchQueue.main.async {
+              searchBar.resignFirstResponder()
+            }
+            
+        }
+    }
+ 
+}
